@@ -235,10 +235,10 @@ static void draw_schedule(int currentPeriod, int periodType, int minutesLeft, in
     }
   }
   
-  if(periodType!=0 && periodType!=4) {
-    snprintf(class_text_buf, sizeof(class_text_buf), "No Class");
-  } else {
+  if(block>=0&&block<=7) {
     snprintf(class_text_buf, sizeof(class_text_buf), classes[block].day[day]);
+  } else {
+    snprintf(class_text_buf, sizeof(class_text_buf), "No Class");
   }
   text_layer_set_text(s_class_layer, class_text_buf);
   
