@@ -319,6 +319,7 @@ static void parse_schedule() {
   char *temp_string;
   char buf[32];
   
+  
   time_t temp_parseSchedule = time(NULL)-3600;//sets an hour back (also in save_schedule)
   struct tm *tick_time = localtime(&temp_parseSchedule);
   APP_LOG(APP_LOG_LEVEL_INFO, "parsing time is %d:%d", tick_time->tm_hour, tick_time->tm_min);
@@ -447,6 +448,8 @@ static void save_schedule(DictionaryIterator *iterator) {
   strftime(buffer, sizeof(buffer), "%x", tick_time);
   persist_write_string(STORAGE_KEY_PERIOD_DATE, buffer);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Schedule saved on with periodDate of: %s ", buffer);
+  
+  memset(periodLastUpdatedDate, '\0', sizeof(periodLastUpdatedDate));
   
   parse_schedule();
 }

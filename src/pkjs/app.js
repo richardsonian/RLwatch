@@ -139,23 +139,38 @@ Pebble.addEventListener('webviewclosed', function(e) {
   console.log("config closed");
   var configData = JSON.parse(decodeURIComponent(e.response));
   
-  var dict = {
-    'PURPOSE': 2,
-    'CLASS_A': configData.ABlockClasses,
-    'CLASS_B': configData.BBlockClasses,
-    'CLASS_C': configData.CBlockClasses,
-    'CLASS_D': configData.DBlockClasses,
-    'CLASS_E': configData.EBlockClasses,
-    'CLASS_F': configData.FBlockClasses,
-    'CLASS_G': configData.GBlockClasses,
-    'CLASS_H': configData.HBlockClasses
-  };
+  var dict = {};
+  if(configData.classUpdate==1) { 
+    dict.PURPOSE = 2;
+    dict.CLASS_A = configData.ABlockClasses;
+    dict.CLASS_B = configData.BBlockClasses;
+    dict.CLASS_C = configData.CBlockClasses;
+    dict.CLASS_D = configData.DBlockClasses;
+    dict.CLASS_E = configData.EBlockClasses;
+    dict.CLASS_F = configData.FBlockClasses;
+    dict.CLASS_G = configData.GBlockClasses;
+    dict.CLASS_H = configData.HBlockClasses;
+    
+    //since is only config options, only send if it exists=>must change if are more options
+    Pebble.sendAppMessage(dict, function() {
+      //console.log('Config data sent successfully!');
+    }, function(e) {
+      //console.log('Error sending config data!');
+    });
+  }
   
+  if(configData.pullSchedule==1) {
+    getDaySchedule();
+  }
+  
+  /* When more options added, send at end <here>
   Pebble.sendAppMessage(dict, function() {
     //console.log('Config data sent successfully!');
   }, function(e) {
     //console.log('Error sending config data!');
   });
+  */
+  
 });
 
 
