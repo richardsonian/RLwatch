@@ -109,7 +109,7 @@ static void parse_classes() {
     persist_read_string(STORAGE_KEY_CLASS_H, classes[7].string, sizeof(classes[7].string));
     
     for(int block=0; block<8; block++) {
-      if(classes[block].string) {
+      if(strcmp(classes[block].string, "")!=0) {
         //first day
         memset(buf, '\0', sizeof(buf));
         string = classes[block].string;

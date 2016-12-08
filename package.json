@@ -45,13 +45,13 @@
                 },
                 {
                     "file": "fonts/RobotoCondensed-Bold.ttf",
-                    "name": "FONT_ROBOTO_CONDENSED_BOLD_18",
+                    "name": "FONT_ROBOTO_CONDENSED_BOLD_16",
                     "targetPlatforms": null,
                     "type": "font"
                 },
                 {
                     "file": "fonts/RobotoCondensed-Bold.ttf",
-                    "name": "FONT_ROBOTO_CONDENSED_BOLD_16",
+                    "name": "FONT_ROBOTO_CONDENSED_BOLD_18",
                     "targetPlatforms": null,
                     "type": "font"
                 },
