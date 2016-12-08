@@ -36,6 +36,7 @@ NOTE: function to get daytype; call on day or if not exist when refrenced
 #define STORAGE_KEY_CURRENT_CLASSTIME_CACHE 24
 #define STORAGE_KEY_IS_DRAWN 25
 #define STORAGE_KEY_NEXT_DAY 26
+#define STORAGE_KEY_DAY_NAME 27
 
 //change for pebble color
 #ifdef PBL_COLOR
@@ -69,6 +70,7 @@ struct class {
 static struct class classes[8];
 static int classes_parsed = 0;
 
+static char dayName[24];
 static int appMessageReady = 0;
 
 //window declaration
@@ -246,7 +248,7 @@ static void draw_schedule(int currentPeriod, int periodType, int minutesLeft, in
       snprintf(class_text_buf, sizeof(class_text_buf), "No Class");
     }
   } else if(periodType==1) {
-      snprintf(class_text_buf, sizeof(class_text_buf), "Day");
+      snprintf(class_text_buf, sizeof(class_text_buf), dayName);
   } else if(periodType==3){
       snprintf(class_text_buf, sizeof(class_text_buf), "Day Monday");
   } else {
@@ -400,6 +402,8 @@ static void parse_schedule() {
       persist_read_string(STORAGE_KEY_PERIOD_EIGHT, periods[8].string, sizeof(periods[8].string));
       persist_read_string(STORAGE_KEY_PERIOD_NINE, periods[9].string, sizeof(periods[9].string));
       persist_read_string(STORAGE_KEY_PERIOD_TEN, periods[10].string, sizeof(periods[10].string));
+      persist_read_string(STORAGE_KEY_DAY_NAME, dayName, sizeof(dayName));
+      
       
       //parse
       for(int i=0; i<11; i++) {periods[i].isLastPeriod=0;}//init period.isLastPeriod
@@ -483,6 +487,7 @@ static void save_schedule(DictionaryIterator *iterator) {
   persist_write_string(STORAGE_KEY_PERIOD_EIGHT, dict_find(iterator, MESSAGE_KEY_PERIOD_EIGHT)->value->cstring);
   persist_write_string(STORAGE_KEY_PERIOD_NINE, dict_find(iterator, MESSAGE_KEY_PERIOD_NINE)->value->cstring);
   persist_write_string(STORAGE_KEY_PERIOD_TEN, dict_find(iterator, MESSAGE_KEY_PERIOD_TEN)->value->cstring);
+  persist_write_string(STORAGE_KEY_DAY_NAME, dict_find(iterator, MESSAGE_KEY_DAY_NAME)->value->cstring);
   
   char buffer[12];
   time_t temp = time(NULL)-3600;//sets an hour back (also in parse_schedule)

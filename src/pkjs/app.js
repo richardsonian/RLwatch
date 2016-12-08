@@ -116,7 +116,7 @@ function getDaySchedule() {
     scheduleDict.PERIOD_EIGHT =  array[8] || "noperiod";
     scheduleDict.PERIOD_NINE = array[9] || "noperiod";
     scheduleDict.PERIOD_TEN =  array[10] || "noperiod";
-    
+    scheduleDict.DAY_NAME = schedule.name || "No Hall";
     
     Pebble.sendAppMessage(scheduleDict, function() {
       //console.log('Message sent successfully: ' + JSON.stringify(scheduleDict));
