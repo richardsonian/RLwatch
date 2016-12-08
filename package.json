@@ -30,7 +30,8 @@
             "CLASS_F",
             "CLASS_G",
             "CLASS_H",
-            "PERIOD_DATE"
+            "PERIOD_DATE",
+            "DAY_NAME"
         ],
         "projectType": "native",
         "resources": {
