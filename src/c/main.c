@@ -35,6 +35,14 @@ NOTE: function to get daytype; call on day or if not exist when refrenced
 #define STORAGE_KEY_CURRENT_PERIOD_CACHE 23
 #define STORAGE_KEY_CURRENT_CLASSTIME_CACHE 24
 #define STORAGE_KEY_IS_DRAWN 25
+#define STORAGE_KEY_NEXT_DAY 26
+
+//change for pebble color
+#ifdef PBL_COLOR
+        static int hasColor = 1;
+#else
+        static int hasColor = 0;
+#endif
 
 //period declarations
 struct period {
@@ -60,13 +68,6 @@ struct class {
 };
 static struct class classes[8];
 static int classes_parsed = 0;
-
-//change for pebble color
-#ifdef PBL_COLOR
-        static int hasColor = 1;
-#else
-        static int hasColor = 0;
-#endif
 
 static int appMessageReady = 0;
 
@@ -158,19 +159,22 @@ static void get_schedule() {
     }
   }
 }
-static void draw_schedule(int currentPeriod, int periodType, int minutesLeft, int lastPeriod) {
+static void draw_schedule(int currentPeriod, int periodType, int minutesLeft, int lastPeriod, char nextDay) {
   int isDrawn = persist_read_int(STORAGE_KEY_IS_DRAWN);
   
   //draw block
   static char block_text_buf[2];
   char oldBlockText[2];
   persist_read_string(STORAGE_KEY_CURRENT_BLOCK_CACHE, oldBlockText, sizeof(oldBlockText));
-  if(currentPeriod != -1) {
+  if(periodType==0||periodType==4) {
     snprintf(block_text_buf, sizeof(block_text_buf), "%s", periods[currentPeriod].block);
     //deleted: persist_write_string(STORAGE_KEY_CURRENT_BLOCK_CACHE, block_text_buf);
   }
   else {
-    snprintf(block_text_buf, sizeof(block_text_buf), "Z");
+    char block_nextDay_buf[2];
+    block_nextDay_buf[0]=nextDay;
+    block_nextDay_buf[1]='\0';
+    snprintf(block_text_buf, sizeof(block_text_buf), "%s", block_nextDay_buf);
   }
   if(isDrawn==0 || strcmp(block_text_buf, oldBlockText)!=0) {
     text_layer_set_text(s_block_layer, block_text_buf);
@@ -235,10 +239,18 @@ static void draw_schedule(int currentPeriod, int periodType, int minutesLeft, in
     }
   }
   
-  if(block>=0&&block<=7) {
-    snprintf(class_text_buf, sizeof(class_text_buf), classes[block].day[day]);
+  if(periodType==0||periodType==4) {
+    if(block>=0&&block<=7) {
+      snprintf(class_text_buf, sizeof(class_text_buf), classes[block].day[day]);
+    } else {
+      snprintf(class_text_buf, sizeof(class_text_buf), "No Class");
+    }
+  } else if(periodType==1) {
+      snprintf(class_text_buf, sizeof(class_text_buf), "Day");
+  } else if(periodType==3){
+      snprintf(class_text_buf, sizeof(class_text_buf), "Day Monday");
   } else {
-    snprintf(class_text_buf, sizeof(class_text_buf), "No Class");
+      snprintf(class_text_buf, sizeof(class_text_buf), "Day Tomorrow");
   }
   text_layer_set_text(s_class_layer, class_text_buf);
   
@@ -310,8 +322,37 @@ static void find_school_info() {
       }
   } else {periodType = 3;}//else weekend
   
+  //figure out what next day is
+  char nextDay = 'Z';
+  char persist_nextDay_buf[2];
+  char updated_persist_nextDay_buf[2];
+  
+  if(periodType==1) { //if before school
+    //set day to first period
+    for(int i=0; i<11; i++) {
+      if(periods[i].period==1) {
+        nextDay = periods[i].block[0];
+      }
+    }
+  }
+  else if(periodType!=3&&periodType!=-1) { //if its not weekend or no school
+    //find what day it will be tomorrow and save it
+    nextDay = (periods[lastPeriod].block[0]-'A'+1)%8+'A';
+    persist_read_string(STORAGE_KEY_NEXT_DAY, persist_nextDay_buf, sizeof(persist_nextDay_buf));
+    if(persist_nextDay_buf[0]!=nextDay) {//if it doesn't match persistent storage, update it
+      updated_persist_nextDay_buf[0]=nextDay;
+      updated_persist_nextDay_buf[1]='\0';
+      persist_write_string(STORAGE_KEY_NEXT_DAY, updated_persist_nextDay_buf);
+    }                   
+  }
+  else { //else if no school(/weekend)
+    //read from what next Day is saved
+    persist_read_string(STORAGE_KEY_NEXT_DAY, persist_nextDay_buf, sizeof(persist_nextDay_buf));
+    nextDay = persist_nextDay_buf[0];
+  }
+  
   APP_LOG(APP_LOG_LEVEL_DEBUG, "currentPeriod: %d, periodType: %d, minutesLeft: %d", currentPeriod, periodType, minutesLeft);
-  draw_schedule(currentPeriod, periodType, minutesLeft, lastPeriod);
+  draw_schedule(currentPeriod, periodType, minutesLeft, lastPeriod, nextDay);
 }//shifted
 static void parse_schedule() {
   const char delim = ':';
@@ -414,6 +455,7 @@ static void parse_schedule() {
       }
       
     }
+  
   parse_classes();
   find_school_info();
 }
