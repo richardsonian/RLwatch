@@ -1,8 +1,3 @@
- //!TODO
-/*
-NOTE: function to get daytype; call on day or if not exist when refrenced
-*/
-
 #include <pebble.h>
 #include <string.h>
 
@@ -90,6 +85,18 @@ static GFont roboto_bold_48;
 
 //FUNCTIONS
 static void parse_classes() {
+  /*
+  //manually hard-code classes (TEMP)
+  persist_write_string(STORAGE_KEY_CLASS_A, "Spanish|Spanish|Spanish|Spanish|Spanish|Spanish|Spanish|Spanish");
+  persist_write_string(STORAGE_KEY_CLASS_B, "MSI|MSI|MSI|MSI|MSI|MSI|MSI|MSI");
+  persist_write_string(STORAGE_KEY_CLASS_C, "Free|Free|Free|Free|Advisor Meeting|Free|Free|Free");
+  persist_write_string(STORAGE_KEY_CLASS_D, "Latin|Latin|Latin|Latin|Latin|Latin|Latin|Latin");
+  persist_write_string(STORAGE_KEY_CLASS_E, "Visual Art|Free|Visual Art|Free|Visual Art|Free|Free|Visual Art");
+  persist_write_string(STORAGE_KEY_CLASS_F, "English|English|English|English|English|English|English|English");
+  persist_write_string(STORAGE_KEY_CLASS_G, "Free|Debate|Glee Club|Free|Jazz Combo|Glee Club|Glee Club|Free");
+  persist_write_string(STORAGE_KEY_CLASS_H, "Western Civ|Western Civ|Western Civ|Western Civ|Western Civ|Western Civ|Western Civ|Western Civ");
+  */
+  
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Parsing classes");
   const char delim = '|';
   char *string;
@@ -241,6 +248,9 @@ static void draw_schedule(int currentPeriod, int periodType, int minutesLeft, in
     }
   }
   
+  time_t drawSchedule_temp = time(NULL);
+  struct tm *tick_time = localtime(&drawSchedule_temp);
+  
   if(periodType==0||periodType==4) {
     if(block>=0&&block<=7) {
       snprintf(class_text_buf, sizeof(class_text_buf), classes[block].day[day]);
@@ -249,7 +259,7 @@ static void draw_schedule(int currentPeriod, int periodType, int minutesLeft, in
     }
   } else if(periodType==1) {
       snprintf(class_text_buf, sizeof(class_text_buf), dayName);
-  } else if(periodType==3){
+  } else if(tick_time->tm_wday == 5 || tick_time->tm_wday == 6){
       snprintf(class_text_buf, sizeof(class_text_buf), "Day Monday");
   } else {
       snprintf(class_text_buf, sizeof(class_text_buf), "Day Tomorrow");
@@ -261,7 +271,7 @@ static void draw_schedule(int currentPeriod, int periodType, int minutesLeft, in
 static void find_school_info() {
   time_t findSchool_temp = time(NULL);
   struct tm *tick_time = localtime(&findSchool_temp);
-  int minutesTotal = (tick_time->tm_hour*60 + tick_time->tm_min);//-((9)*60+(40));//offset
+  int minutesTotal = (tick_time->tm_hour*60 + tick_time->tm_min);//-((6)*60+(40));//offset
   int period0StartMinutesTotal = periods[0].startHours*60 + periods[0].startMinutes;
   int startPeriodMinutesTotal;
   int endPeriodMinutesTotal;
@@ -355,7 +365,7 @@ static void find_school_info() {
   
   APP_LOG(APP_LOG_LEVEL_DEBUG, "currentPeriod: %d, periodType: %d, minutesLeft: %d", currentPeriod, periodType, minutesLeft);
   draw_schedule(currentPeriod, periodType, minutesLeft, lastPeriod, nextDay);
-}//shifted
+}
 static void parse_schedule() {
   const char delim = ':';
   char *string;
