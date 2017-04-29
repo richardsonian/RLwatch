@@ -29,9 +29,11 @@
 #define STORAGE_KEY_CURRENT_CLASS_CACHE 22
 #define STORAGE_KEY_CURRENT_PERIOD_CACHE 23
 #define STORAGE_KEY_CURRENT_CLASSTIME_CACHE 24
+#define STORAGE_KEY_CURRENT_DROPDAY_CACHE 28
 #define STORAGE_KEY_IS_DRAWN 25
 #define STORAGE_KEY_NEXT_DAY 26
 #define STORAGE_KEY_DAY_NAME 27
+//28 used
 
 //change for pebble color
 #ifdef PBL_COLOR
@@ -77,6 +79,7 @@ static TextLayer *s_block_layer;
 static TextLayer *s_class_layer;
 static TextLayer *s_period_layer;
 static TextLayer *s_classtime_layer;
+static TextLayer *s_dropday_layer;
 
 //Font declarations
 static GFont roboto_bold_condensed_16;
@@ -169,6 +172,7 @@ static void get_schedule() {
   }
 }
 static void draw_schedule(int currentPeriod, int periodType, int minutesLeft, int lastPeriod, char nextDay) {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Drawing Schedule");
   int isDrawn = persist_read_int(STORAGE_KEY_IS_DRAWN);
   
   //draw block
@@ -265,6 +269,28 @@ static void draw_schedule(int currentPeriod, int periodType, int minutesLeft, in
       snprintf(class_text_buf, sizeof(class_text_buf), "Day Tomorrow");
   }
   text_layer_set_text(s_class_layer, class_text_buf);
+  
+  
+  
+  //draw dropday
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "drawing dropday");
+  static char dropday_text_buf[2];
+  char oldDropdayText[2];
+  persist_read_string(STORAGE_KEY_CURRENT_DROPDAY_CACHE, oldDropdayText, sizeof(oldDropdayText));
+  
+  if((periodType==0 || periodType==1 || periodType==4) && (periods[lastPeriod].period<7)) {
+    snprintf(dropday_text_buf, sizeof(dropday_text_buf), "D");
+    //deleted: persist_write_string(STORAGE_KEY_CURRENT_DROPDAY_CACHE, dropday_text_buf);
+  }
+  else {
+    snprintf(dropday_text_buf, sizeof(dropday_text_buf), " ");
+    //deleted: persist_write_string(STORAGE_KEY_CURRENT_DROPDAY_CACHE, dropday_text_buf);
+  }
+
+  if(isDrawn==0 || strcmp(dropday_text_buf, oldDropdayText)!=0) {
+    text_layer_set_text(s_dropday_layer, dropday_text_buf);
+    persist_write_string(STORAGE_KEY_CURRENT_DROPDAY_CACHE, dropday_text_buf);
+  }
   
   persist_write_int(STORAGE_KEY_IS_DRAWN, 1);
 } //change persistent/isdrawn to static variable old trackers;  WILL WORK (this doesnt)
@@ -601,6 +627,14 @@ static void main_window_load(Window *window) {
   text_layer_set_font(s_classtime_layer, roboto_bold_condensed_16);
   text_layer_set_text_alignment(s_classtime_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(s_classtime_layer));
+  
+  //dropday layer
+  s_dropday_layer = text_layer_create(GRect(0, 60, 30, 20));
+  text_layer_set_background_color(s_dropday_layer, GColorClear);
+  text_layer_set_text_color(s_dropday_layer, hasColor ? GColorBlack : GColorWhite);
+  text_layer_set_font(s_dropday_layer, roboto_bold_condensed_16);
+  text_layer_set_text_alignment(s_classtime_layer, GTextAlignmentCenter);
+  layer_add_child(window_layer, text_layer_get_layer(s_dropday_layer));
 }
 static void main_window_unload(Window *window) {
   //destroy layers
@@ -610,6 +644,7 @@ static void main_window_unload(Window *window) {
   text_layer_destroy(s_class_layer);
   text_layer_destroy(s_period_layer);
   text_layer_destroy(s_classtime_layer);
+  text_layer_destroy(s_dropday_layer);
   
   //unload fonts
   fonts_unload_custom_font(roboto_bold_condensed_16);
